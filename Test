@@ -1,3 +1,4 @@
+_G.AutoBuy = true
 local targetPlaceId = 87039211657390 -- Place ID ที่ต้องการ
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
