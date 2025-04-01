@@ -1,0 +1,78 @@
+local targetPlaceId = 87039211657390 -- Place ID ที่ต้องการ
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+
+local args1 = {
+    [1] = {
+        [1] = {
+            ["Type"] = "Gems",
+            ["Event"] = "DungeonAction",
+            ["Action"] = "BuyTicket"
+        },
+        [2] = "\n"
+    }
+}
+
+local args2 = {
+    [1] = {
+        [1] = {
+            ["Type"] = "Gems",
+            ["Event"] = "DungeonAction",
+            ["Action"] = "BuyTicket"
+        },
+        [2] = "\t"
+    }
+}
+
+local function tryBuyTicket(args)
+    local success = pcall(function()
+        game:GetService("ReplicatedStorage"):WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent"):FireServer(unpack(args))
+    end)
+    return success
+end
+
+local function hopServer()
+    print("ไม่สามารถซื้อบัตรได้ กำลังเปลี่ยนเซิร์ฟเวอร์...")
+    local servers = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")).data
+    for _, server in ipairs(servers) do
+        if server.id ~= game.JobId and server.playing < server.maxPlayers then
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, Players.LocalPlayer)
+            return
+        end
+    end
+end
+
+-- เช็คว่าอยู่ใน Place ID ที่กำหนดหรือไม่
+if game.PlaceId == targetPlaceId then
+    game.Loaded:Wait()
+    print("เกมโหลดเสร็จแล้ว!")
+
+    wait(3)
+
+    if _G.AutoBuy then
+        local success1, success2 = false, false
+
+        if tryBuyTicket(args1) then
+            success1 = true
+            print("ซื้อบัตรลงดัน (ชุดที่ 1) สำเร็จ!")
+        end
+
+        if tryBuyTicket(args2) then
+            success2 = true
+            print("ซื้อบัตรลงดัน (ชุดที่ 2) สำเร็จ!")
+        end
+
+        -- ถ้าไม่มีการ Print ภายใน 10 วินาที ให้ Hop Server
+        task.spawn(function()
+            wait(10)
+            if not success1 and not success2 then
+                hopServer()
+            end
+        end)
+
+    else
+        print("AutoBuy ปิดอยู่ ปิดใช้งานสคริปต์.")
+    end
+else
+    print("ไม่อยู่ในแมพที่ต้องการ... ไม่ทำการซื้อบัตร.")
+end
